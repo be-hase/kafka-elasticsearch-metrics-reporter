@@ -15,7 +15,6 @@ import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.core.VirtualMachineMetrics;
 import com.yammer.metrics.reporting.AbstractPollingReporter;
 import com.yammer.metrics.stats.Snapshot;
-import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
@@ -293,7 +292,10 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 			json.writeNumberField("memory.heap_usage", vm.heapUsage());
 			json.writeNumberField("memory.non_heap_usage", vm.nonHeapUsage());
 			for (Map.Entry<String, Double> pool : vm.memoryPoolUsage().entrySet()) {
-				String key = StringUtils.replace(pool.getKey(), " ", "_");
+				if (isEmpty(pool.getKey())) {
+					continue;
+				}
+				String key = pool.getKey().replace(" ", "_");
 				json.writeNumberField("memory.memory_pool_usages." + key, pool.getValue());
 			}
 
@@ -302,13 +304,19 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 			json.writeNumberField("uptime", vm.uptime());
 			json.writeNumberField("fd_usage", vm.fileDescriptorUsage());
 			for (Map.Entry<Thread.State, Double> entry : vm.threadStatePercentages().entrySet()) {
-				String key = StringUtils.lowerCase(entry.getKey().toString());
-				key = StringUtils.replace(key, " ", "_");
+				if (entry.getKey() == null || isEmpty(entry.getKey().toString())) {
+					continue;
+				}
+				String key = entry.getKey().toString().toLowerCase();
+				key = key.replace(" ", "_");
 				json.writeNumberField("thread-states." + key, entry.getValue());
 			}
 
 			for (Map.Entry<String, VirtualMachineMetrics.GarbageCollectorStats> entry : vm.garbageCollectors().entrySet()) {
-				String key = StringUtils.replace(entry.getKey(), " ", "_");
+				if (isEmpty(entry.getKey())) {
+					continue;
+				}
+				String key = entry.getKey().replace(" ", "_");
 				final String name = "gc." + key;
 				json.writeNumberField(name + ".time", entry.getValue().getTime(TimeUnit.MILLISECONDS));
 				json.writeNumberField(name + ".runs", entry.getValue().getRuns());
@@ -363,7 +371,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	protected void sendBulkRequest() {
 		final String sBuf = buffer.toString();
 		buffer = new StringWriter();
-		if (sBuf == null || sBuf.length() == 0) {
+		if (isEmpty(sBuf)) {
 			LOG.info("The metrics is blank");
 			return;
 		}
@@ -429,5 +437,9 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 					.append('.');
 		}
 		return sb.append(name.getName()).toString();
+	}
+
+	public static boolean isEmpty(String str) {
+		return str == null || str.length() == 0;
 	}
 }
