@@ -34,6 +34,8 @@ import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.Cleanup;
+
 public class ElasticsearchReporter extends AbstractPollingReporter implements MetricProcessor<DateTime> {
 	private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchReporter.class);
 
@@ -91,179 +93,127 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		DateTime epoch = DateTime.now();
 		printRegularMetrics(epoch);
 		if (printVmMetrics) {
-			printVmMetrics(epoch);
+			try {
+				printVmMetrics(epoch);
+			} catch (Exception ignored) {
+				LOG.error("Error printing vm metrics:", ignored);
+			}
 		}
 		sendBulkRequest();
 	}
 
 	@Override
 	public void processMeter(MetricName metricName, Metered metered, DateTime epoch) throws Exception {
-		StringWriter writer = null;
-		JsonGenerator json = null;
-		try {
-			writer = new StringWriter();
-			json = createAndInitJsonGenerator(writer, metricName, epoch);
+		@Cleanup StringWriter writer = new StringWriter();
+		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, metricName, epoch);
 
-			json.writeNumberField("m1_rate", metered.oneMinuteRate());
-			json.writeNumberField("m5_rate", metered.fiveMinuteRate());
-			json.writeNumberField("m15_rate", metered.fifteenMinuteRate());
-			json.writeNumberField("mean_rate", metered.meanRate());
-			json.writeNumberField("count", metered.count());
+		json.writeNumberField("m1_rate", metered.oneMinuteRate());
+		json.writeNumberField("m5_rate", metered.fiveMinuteRate());
+		json.writeNumberField("m15_rate", metered.fifteenMinuteRate());
+		json.writeNumberField("mean_rate", metered.meanRate());
+		json.writeNumberField("count", metered.count());
 
-			json.writeEndObject();
-			json.flush();
-			addReportBuffer("meter", writer.toString(), epoch);
-		} finally {
-			if (writer != null) {
-				writer.close();
-			}
-			if (json != null) {
-				json.close();
-			}
-		}
-
+		json.writeEndObject();
+		json.flush();
+		addReportBuffer("meter", writer.toString(), epoch);
 	}
 
 	@Override
 	public void processCounter(MetricName metricName, Counter counter, DateTime epoch) throws Exception {
-		StringWriter writer = null;
-		JsonGenerator json = null;
-		try {
-			writer = new StringWriter();
-			json = createAndInitJsonGenerator(writer, metricName, epoch);
+		@Cleanup StringWriter writer = new StringWriter();
+		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, metricName, epoch);
 
-			json.writeNumberField("count", counter.count());
+		json.writeNumberField("count", counter.count());
 
-			json.writeEndObject();
-			json.flush();
-			addReportBuffer("counter", writer.toString(), epoch);
-		} finally {
-			if (writer != null) {
-				writer.close();
-			}
-			if (json != null) {
-				json.close();
-			}
-		}
+		json.writeEndObject();
+		json.flush();
+		addReportBuffer("counter", writer.toString(), epoch);
 	}
 
 	@Override
 	public void processHistogram(MetricName metricName, Histogram histogram, DateTime epoch) throws Exception {
-		StringWriter writer = null;
-		JsonGenerator json = null;
-		try {
-			writer = new StringWriter();
-			json = createAndInitJsonGenerator(writer, metricName, epoch);
+		@Cleanup StringWriter writer = new StringWriter();
+		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, metricName, epoch);
 
-			final Snapshot snapshot = histogram.getSnapshot();
+		final Snapshot snapshot = histogram.getSnapshot();
 
-			json.writeNumberField("max", histogram.max());
-			json.writeNumberField("mean", histogram.mean());
-			json.writeNumberField("min", histogram.min());
-			json.writeNumberField("stddev", histogram.stdDev());
-			json.writeNumberField("p50", snapshot.getMedian());
-			json.writeNumberField("p75", snapshot.get75thPercentile());
-			json.writeNumberField("p95", snapshot.get95thPercentile());
-			json.writeNumberField("p98", snapshot.get98thPercentile());
-			json.writeNumberField("p99", snapshot.get99thPercentile());
-			json.writeNumberField("p999", snapshot.get999thPercentile());
-			json.writeNumberField("count", histogram.count());
-			json.writeNumberField("sum", histogram.sum());
+		json.writeNumberField("max", histogram.max());
+		json.writeNumberField("mean", histogram.mean());
+		json.writeNumberField("min", histogram.min());
+		json.writeNumberField("stddev", histogram.stdDev());
+		json.writeNumberField("p50", snapshot.getMedian());
+		json.writeNumberField("p75", snapshot.get75thPercentile());
+		json.writeNumberField("p95", snapshot.get95thPercentile());
+		json.writeNumberField("p98", snapshot.get98thPercentile());
+		json.writeNumberField("p99", snapshot.get99thPercentile());
+		json.writeNumberField("p999", snapshot.get999thPercentile());
+		json.writeNumberField("count", histogram.count());
+		json.writeNumberField("sum", histogram.sum());
 
-			json.writeEndObject();
-			json.flush();
-			addReportBuffer("histogram", writer.toString(), epoch);
-		} finally {
-			if (writer != null) {
-				writer.close();
-			}
-			if (json != null) {
-				json.close();
-			}
-		}
+		json.writeEndObject();
+		json.flush();
+		addReportBuffer("histogram", writer.toString(), epoch);
 	}
 
 	@Override
 	public void processTimer(MetricName metricName, Timer timer, DateTime epoch) throws Exception {
-		StringWriter writer = null;
-		JsonGenerator json = null;
-		try {
-			writer = new StringWriter();
-			json = createAndInitJsonGenerator(writer, metricName, epoch);
+		@Cleanup StringWriter writer = new StringWriter();
+		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, metricName, epoch);
 
-			final Snapshot snapshot = timer.getSnapshot();
+		final Snapshot snapshot = timer.getSnapshot();
 
-			json.writeNumberField("max", timer.max());
-			json.writeNumberField("mean", timer.mean());
-			json.writeNumberField("min", timer.min());
-			json.writeNumberField("stddev", timer.stdDev());
-			json.writeNumberField("p50", snapshot.getMedian());
-			json.writeNumberField("p75", snapshot.get75thPercentile());
-			json.writeNumberField("p95", snapshot.get95thPercentile());
-			json.writeNumberField("p98", snapshot.get98thPercentile());
-			json.writeNumberField("p99", snapshot.get99thPercentile());
-			json.writeNumberField("p999", snapshot.get999thPercentile());
-			json.writeNumberField("count", timer.count());
-			json.writeNumberField("m1_rate", timer.oneMinuteRate());
-			json.writeNumberField("m5_rate", timer.fiveMinuteRate());
-			json.writeNumberField("m15_rate", timer.fifteenMinuteRate());
-			json.writeNumberField("mean_rate", timer.meanRate());
+		json.writeNumberField("max", timer.max());
+		json.writeNumberField("mean", timer.mean());
+		json.writeNumberField("min", timer.min());
+		json.writeNumberField("stddev", timer.stdDev());
+		json.writeNumberField("p50", snapshot.getMedian());
+		json.writeNumberField("p75", snapshot.get75thPercentile());
+		json.writeNumberField("p95", snapshot.get95thPercentile());
+		json.writeNumberField("p98", snapshot.get98thPercentile());
+		json.writeNumberField("p99", snapshot.get99thPercentile());
+		json.writeNumberField("p999", snapshot.get999thPercentile());
+		json.writeNumberField("count", timer.count());
+		json.writeNumberField("m1_rate", timer.oneMinuteRate());
+		json.writeNumberField("m5_rate", timer.fiveMinuteRate());
+		json.writeNumberField("m15_rate", timer.fifteenMinuteRate());
+		json.writeNumberField("mean_rate", timer.meanRate());
 
-			json.writeEndObject();
-			json.flush();
-			addReportBuffer("timer", writer.toString(), epoch);
-		} finally {
-			if (writer != null) {
-				writer.close();
-			}
-			if (json != null) {
-				json.close();
-			}
-		}
+		json.writeEndObject();
+		json.flush();
+		addReportBuffer("timer", writer.toString(), epoch);
 	}
 
 	@Override
 	public void processGauge(MetricName metricName, Gauge<?> gauge, DateTime epoch) throws Exception {
-		StringWriter writer = null;
-		JsonGenerator json = null;
 		Object value = gauge.value();
 		if (value == null) {
 			return;
 		}
-		try {
-			writer = new StringWriter();
-			json = createAndInitJsonGenerator(writer, metricName, epoch);
+		@Cleanup StringWriter writer = new StringWriter();
+		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, metricName, epoch);
 
-			if (value instanceof Long) {
-				json.writeNumberField("longValue", (Long)value);
-			} else if (value instanceof Integer) {
-				json.writeNumberField("integerValue", (Integer)value);
-			} else if (value instanceof Short) {
-				json.writeNumberField("shortValue", (Short)value);
-			} else if (value instanceof Double) {
-				json.writeNumberField("doubleValue", (Double)value);
-			} else if (value instanceof Float) {
-				json.writeNumberField("floatValue", (Float)value);
-			} else if (value instanceof String) {
-				json.writeStringField("stringValue", (String)value);
-			} else if (value instanceof Boolean) {
-				json.writeBooleanField("booleanValue", (Boolean)value);
-			} else {
-				// UNSUPPORTED
-				return;
-			}
-
-			json.writeEndObject();
-			json.flush();
-			addReportBuffer("gauge", writer.toString(), epoch);
-		} finally {
-			if (writer != null) {
-				writer.close();
-			}
-			if (json != null) {
-				json.close();
-			}
+		if (value instanceof Long) {
+			json.writeNumberField("longValue", (Long)value);
+		} else if (value instanceof Integer) {
+			json.writeNumberField("integerValue", (Integer)value);
+		} else if (value instanceof Short) {
+			json.writeNumberField("shortValue", (Short)value);
+		} else if (value instanceof Double) {
+			json.writeNumberField("doubleValue", (Double)value);
+		} else if (value instanceof Float) {
+			json.writeNumberField("floatValue", (Float)value);
+		} else if (value instanceof String) {
+			json.writeStringField("stringValue", (String)value);
+		} else if (value instanceof Boolean) {
+			json.writeBooleanField("booleanValue", (Boolean)value);
+		} else {
+			// UNSUPPORTED
+			return;
 		}
+
+		json.writeEndObject();
+		json.flush();
+		addReportBuffer("gauge", writer.toString(), epoch);
 	}
 
 	protected void printRegularMetrics(final DateTime epoch) {
@@ -282,64 +232,46 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		}
 	}
 
-	protected void printVmMetrics(final DateTime epoch) {
-		StringWriter writer = null;
-		JsonGenerator json = null;
-		try {
-			writer = new StringWriter();
-			json = createAndInitJsonGenerator(writer, "jvm", epoch);
+	protected void printVmMetrics(final DateTime epoch) throws Exception {
+		@Cleanup StringWriter writer = new StringWriter();
+		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, "jvm", epoch);
 
-			json.writeNumberField("memory.heap_usage", vm.heapUsage());
-			json.writeNumberField("memory.non_heap_usage", vm.nonHeapUsage());
-			for (Map.Entry<String, Double> pool : vm.memoryPoolUsage().entrySet()) {
-				if (isEmpty(pool.getKey())) {
-					continue;
-				}
-				String key = pool.getKey().replace(" ", "_");
-				json.writeNumberField("memory.memory_pool_usages." + key, pool.getValue());
+		json.writeNumberField("memory.heap_usage", vm.heapUsage());
+		json.writeNumberField("memory.non_heap_usage", vm.nonHeapUsage());
+		for (Map.Entry<String, Double> pool : vm.memoryPoolUsage().entrySet()) {
+			if (isEmpty(pool.getKey())) {
+				continue;
 			}
-
-			json.writeNumberField("daemon_thread_count", vm.daemonThreadCount());
-			json.writeNumberField("thread_count", vm.threadCount());
-			json.writeNumberField("uptime", vm.uptime());
-			json.writeNumberField("fd_usage", vm.fileDescriptorUsage());
-			for (Map.Entry<Thread.State, Double> entry : vm.threadStatePercentages().entrySet()) {
-				if (entry.getKey() == null || isEmpty(entry.getKey().toString())) {
-					continue;
-				}
-				String key = entry.getKey().toString().toLowerCase();
-				key = key.replace(" ", "_");
-				json.writeNumberField("thread-states." + key, entry.getValue());
-			}
-
-			for (Map.Entry<String, VirtualMachineMetrics.GarbageCollectorStats> entry : vm.garbageCollectors().entrySet()) {
-				if (isEmpty(entry.getKey())) {
-					continue;
-				}
-				String key = entry.getKey().replace(" ", "_");
-				final String name = "gc." + key;
-				json.writeNumberField(name + ".time", entry.getValue().getTime(TimeUnit.MILLISECONDS));
-				json.writeNumberField(name + ".runs", entry.getValue().getRuns());
-			}
-
-			json.writeEndObject();
-			json.flush();
-			addReportBuffer("jvm", writer.toString(), epoch);
-		} catch (Exception ignore) {
-		} finally {
-			if (writer != null) {
-				try {
-					writer.close();
-				} catch (IOException ignore) {
-				}
-			}
-			if (json != null) {
-				try {
-					json.close();
-				} catch (IOException ignore) {
-				}
-			}
+			String key = pool.getKey().replace(" ", "_");
+			json.writeNumberField("memory.memory_pool_usages." + key, pool.getValue());
 		}
+
+		json.writeNumberField("daemon_thread_count", vm.daemonThreadCount());
+		json.writeNumberField("thread_count", vm.threadCount());
+		json.writeNumberField("uptime", vm.uptime());
+		json.writeNumberField("fd_usage", vm.fileDescriptorUsage());
+		for (Map.Entry<Thread.State, Double> entry : vm.threadStatePercentages().entrySet()) {
+			if (entry.getKey() == null || isEmpty(entry.getKey().toString())) {
+				continue;
+			}
+			String key = entry.getKey().toString().toLowerCase();
+			key = key.replace(" ", "_");
+			json.writeNumberField("thread-states." + key, entry.getValue());
+		}
+
+		for (Map.Entry<String, VirtualMachineMetrics.GarbageCollectorStats> entry : vm.garbageCollectors().entrySet()) {
+			if (isEmpty(entry.getKey())) {
+				continue;
+			}
+			String key = entry.getKey().replace(" ", "_");
+			final String name = "gc." + key;
+			json.writeNumberField(name + ".time", entry.getValue().getTime(TimeUnit.MILLISECONDS));
+			json.writeNumberField(name + ".runs", entry.getValue().getRuns());
+		}
+
+		json.writeEndObject();
+		json.flush();
+		addReportBuffer("jvm", writer.toString(), epoch);
 	}
 
 	protected JsonGenerator createAndInitJsonGenerator(final Writer sw, MetricName metricName, DateTime epoch)
