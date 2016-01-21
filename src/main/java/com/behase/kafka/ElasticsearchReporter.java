@@ -420,13 +420,17 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		connection.getOutputStream().close();
 		connection.disconnect();
 		if (connection.getResponseCode() != 200) {
-			LOG.warn("Reporting returned code {} {}: {}",
+			LOG.warn("Reporting returned code {} {}",
 					connection.getResponseCode(),
 					connection.getResponseMessage());
 		}
 	}
 
-	public static String sanitizeName(MetricName name) {
+	public static boolean isEmpty(String str) {
+		return str == null || str.length() == 0;
+	}
+
+	protected static String sanitizeName(MetricName name) {
 		final StringBuilder sb = new StringBuilder()
 				.append(name.getGroup())
 				.append('.')
@@ -437,9 +441,5 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 					.append('.');
 		}
 		return sb.append(name.getName()).toString();
-	}
-
-	public static boolean isEmpty(String str) {
-		return str == null || str.length() == 0;
 	}
 }
