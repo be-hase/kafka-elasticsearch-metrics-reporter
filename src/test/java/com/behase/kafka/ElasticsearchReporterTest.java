@@ -15,6 +15,13 @@ import com.yammer.metrics.core.MetricsRegistry;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.stats.Snapshot;
 import lombok.Cleanup;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
 import org.joda.time.DateTimeZone;
@@ -27,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,7 +89,7 @@ public class ElasticsearchReporterTest {
 		DateTime mockDateTime = new DateTime(2016, 1, 1, 0, 0, 0, DateTimeZone.forID("Asia/Tokyo"));
 		DateTimeUtils.setCurrentMillisFixed(mockDateTime.getMillis());
 
-		DOCKER_HOST = "";
+		DOCKER_HOST = System.getProperty("dockerHost", "192.168.99.100");
 	}
 
 	@Before
@@ -90,7 +98,7 @@ public class ElasticsearchReporterTest {
 
 		reporter = new ElasticsearchReporter(
 				metrics,
-				"localhost:9200",
+				DOCKER_HOST + ":9200",
 				MetricPredicate.ALL,
 				"index-",
 				null,
@@ -101,7 +109,7 @@ public class ElasticsearchReporterTest {
 
 		spyReporter = new SpyElasticsearchReporter(
 				metrics,
-				"localhost:9200",
+				DOCKER_HOST + ":9200",
 				MetricPredicate.ALL,
 				"index-",
 				null,
@@ -353,7 +361,7 @@ public class ElasticsearchReporterTest {
 	public void printRegularMetrics_with_predicate() {
 		reporter = new ElasticsearchReporter(
 				metrics,
-				"localhost:9200",
+				DOCKER_HOST + ":9200",
 				new ExcludeRegexRegexMetricPredicate("group.type.gauge|group.type.counter"),
 				"index-",
 				null,
@@ -377,7 +385,6 @@ public class ElasticsearchReporterTest {
 		reporter.printRegularMetrics(DateTime.now());
 		assertThat(reporter.buffer.toString().split("\n").length, is(6));
 	}
-
 
 	@Test
 	public void printVmMetrics() throws Exception {
@@ -447,7 +454,7 @@ public class ElasticsearchReporterTest {
 	public void addReportBuffer_with_ttl() {
 		reporter = new ElasticsearchReporter(
 				metrics,
-				"localhost:9200",
+				DOCKER_HOST + ":9200",
 				MetricPredicate.ALL,
 				"index-",
 				null,
@@ -466,8 +473,36 @@ public class ElasticsearchReporterTest {
 	}
 
 	@Test
-	public void sendBulkRequest() {
+	public void sendBulkRequest() throws Exception {
+		@Cleanup CloseableHttpClient httpClient = HttpClients.createDefault();
 
+		HttpDelete deleteMethod = new HttpDelete("http://" + DOCKER_HOST + ":9200/index-2016.01.01");
+		httpClient.execute(deleteMethod);
+		Thread.sleep(1000);
+
+		metrics.newGauge(new MetricName("group", "type", "gauge"), new Gauge<String>() {
+			public String value() {
+				return "gauge";
+			}
+		});
+		metrics.newCounter(new MetricName("group", "type", "counter")).inc();
+		metrics.newMeter(new MetricName("group", "type", "meter"), "meter", TimeUnit.SECONDS).mark();
+		metrics.newHistogram(new MetricName("group", "type", "histogram"), false).update(100);
+		Timer timer = metrics.newTimer(new MetricName("group", "type", "timer"), TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
+		timer.time();
+		timer.stop();
+
+		reporter.printRegularMetrics(DateTime.now());
+		reporter.sendBulkRequest();
+		Thread.sleep(1000);
+
+		HttpGet getMethod = new HttpGet("http://" + DOCKER_HOST + ":9200/index-2016.01.01/_search");
+		@Cleanup CloseableHttpResponse response = httpClient.execute(getMethod);
+		HttpEntity entity = response.getEntity();
+		String body = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+
+		DocumentContext doc = JsonPath.using(jsonConf).parse(body);
+		assertThat(doc.read("$.hits.total", Integer.class), is(5));
 	}
 
 	@Test

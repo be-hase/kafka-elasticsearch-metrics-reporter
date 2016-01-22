@@ -1,0 +1,37 @@
+sudo: required
+
+services:
+  - docker
+
+language: java
+
+jdk:
+  - openjdk6
+  - openjdk7
+  - oraclejdk7
+  - oraclejdk8
+
+script:
+  - docker pull elasticsearch:2.1
+  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:2.1`
+  - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
+  - docker stop $dps
+
+#  - docker pull elasticsearch:2.0
+#  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:2.0`
+#  - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
+#  - docker stop $dps
+#
+#  - docker pull elasticsearch:1.7
+#  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:1.7`
+#  - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
+#  - docker stop $dps
+#
+#  - docker pull elasticsearch:1.6
+#  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:1.6`
+#  - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
+#  - docker stop $dps
+
+cache:
+  directories:
+    - $HOME/.m2
