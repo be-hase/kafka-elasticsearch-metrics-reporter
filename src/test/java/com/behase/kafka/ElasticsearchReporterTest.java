@@ -86,7 +86,7 @@ public class ElasticsearchReporterTest {
 
 	@BeforeClass
 	public static void beforeClass() {
-		DateTime mockDateTime = new DateTime(2016, 1, 1, 0, 0, 0, DateTimeZone.forID("Asia/Tokyo"));
+		DateTime mockDateTime = new DateTime(2016, 1, 1, 0, 0, 0);
 		DateTimeUtils.setCurrentMillisFixed(mockDateTime.getMillis());
 
 		DOCKER_HOST = System.getProperty("dockerHost", "192.168.99.100");
@@ -499,7 +499,7 @@ public class ElasticsearchReporterTest {
 		HttpGet getMethod = new HttpGet("http://" + DOCKER_HOST + ":9200/index-2016.01.01/_search");
 		@Cleanup CloseableHttpResponse response = httpClient.execute(getMethod);
 		HttpEntity entity = response.getEntity();
-		String body = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+		String body = EntityUtils.toString(entity, "UTF-8");
 
 		DocumentContext doc = JsonPath.using(jsonConf).parse(body);
 		assertThat(doc.read("$.hits.total", Integer.class), is(5));
