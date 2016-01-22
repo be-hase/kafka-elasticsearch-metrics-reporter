@@ -24,7 +24,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
-import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -420,7 +418,7 @@ public class ElasticsearchReporterTest {
 		json.flush();
 
 		DocumentContext doc = JsonPath.using(jsonConf).parse(sw.toString());
-		assertThat(doc.read("$.@timestamp", String.class), is("2016-01-01T00:00:00.000+09:00"));
+		assertThat(doc.read("$.@timestamp", String.class), containsString("2016-01-01T00:00:00.000"));
 		assertThat(doc.read("$.@name", String.class), is("metricName"));
 		assertThat(doc.read("$.hostname", String.class), is(reporter.hostname));
 	}
@@ -433,7 +431,7 @@ public class ElasticsearchReporterTest {
 		json.flush();
 
 		DocumentContext doc = JsonPath.using(jsonConf).parse(sw.toString());
-		assertThat(doc.read("$.@timestamp", String.class), is("2016-01-01T00:00:00.000+09:00"));
+		assertThat(doc.read("$.@timestamp", String.class), containsString("2016-01-01T00:00:00.000"));
 		assertThat(doc.read("$.@name", String.class), is("group.type.name"));
 		assertThat(doc.read("$.hostname", String.class), is(reporter.hostname));
 	}

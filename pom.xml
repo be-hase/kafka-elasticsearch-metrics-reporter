@@ -10,6 +10,7 @@
   <name>kafka-elasticsearch-metrics-reporter</name>
 
   <properties>
+    <java.version>1.6</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <shaded.name>shaded</shaded.name>
   </properties>
