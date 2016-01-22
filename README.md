@@ -11,8 +11,8 @@ This send metris data to Elasticseach.
   * I tested with 1.6, 1.7, 2.0, 2.1.
 
 # Install on broker.
-1. Build this project using `mvn clean package -DskipTests` or download jar from here.
-2. Add `kafka-elasticsearch-metrics-reporter-<version>-shaded.jar` to the `libs/` directory of your kafka broker installation.
+1. Build this project using `mvn clean package -DskipTests` or download jar from [here](https://github.com/be-hase/kafka-elasticsearch-metrics-reporter/releases/download/v1.0.0/kafka-elasticsearch-metrics-reporter-1.0.0-shaded.jar).
+2. Add `kafka-elasticsearch-metrics-reporter-1.0.0-shaded.jar` to the `libs/` directory of your kafka broker installation.
 3. Configure the broker (see the configuration section below).
 4. Restart the broker.
 
