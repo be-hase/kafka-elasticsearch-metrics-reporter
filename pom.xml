@@ -4,21 +4,21 @@
 
   <groupId>com.behase</groupId>
   <artifactId>kafka-elasticsearch-metrics-reporter</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
   <packaging>jar</packaging>
 
   <name>kafka-elasticsearch-metrics-reporter</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <shaded.name>uber</shaded.name>
+    <shaded.name>shaded</shaded.name>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.10</artifactId>
-      <version>0.8.2.1</version>
+      <version>0.8.2.0</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -71,7 +71,7 @@
         </executions>
       </plugin>
 
-      <!-- Build Jar -->
+      <!-- Build shaded Jar -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>

@@ -50,7 +50,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	protected final MetricPredicate predicate;
 	protected final String indexPrefix;
 	protected final String timestampFieldName;
-	protected final long ttl;
+	protected final String ttl;
 	protected final boolean printVmMetrics;
 
 	protected final List<String> nodesList = new ArrayList<String>();
@@ -61,7 +61,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	protected final VirtualMachineMetrics vm = VirtualMachineMetrics.getInstance();
 
 	public ElasticsearchReporter(MetricsRegistry registry, String nodes, MetricPredicate predicate, String indexPrefix,
-			String timestampFieldName, long ttl, boolean printVmMetrics, String name) {
+			String timestampFieldName, String ttl, boolean printVmMetrics, String name) {
 		super(registry, name == null ? DEFAULT_NAME : name);
 
 		this.nodes = nodes;
@@ -360,7 +360,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	protected void addReportBuffer(String type, String json, DateTime epoch) {
 		final String index = indexPrefix + epoch.toString("yyyy.MM.dd");
 
-		if (ttl > 0) {
+		if (ttl != null && ttl.length() > 0) {
 			buffer.append(String.format(ES_BULK_INDEX_WITH_TTL_RAW_FORMAT, index, type, ttl));
 		} else {
 			buffer.append(String.format(ES_BULK_INDEX_RAW_FORMAT, index, type));

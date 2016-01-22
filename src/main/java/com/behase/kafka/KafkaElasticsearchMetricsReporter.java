@@ -20,17 +20,18 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 	protected String esNodes;
 	protected String esIndexPrefix;
 	protected MetricPredicate predicate;
-	protected long esTtl;
+	protected String esTtl;
 	protected boolean getVmInfo;
 
 	@Override
 	public void init(VerifiableProperties props) {
 		if (!initialized) {
 			KafkaMetricsConfig metricsConfig = new KafkaMetricsConfig(props);
+
 			esNodes = props.getString("kafka.elasticsearch.metrics.nodes", null);
 			esIndexPrefix = props.getString("kafka.elasticsearch.metrics.indexPrefix", null);
 			String predicateRegex = props.getString("kafka.elasticsearch.metrics.excludeRegex", null);
-			esTtl = props.getLong("kafka.elasticsearch.metrics.ttl", 0);
+			esTtl = props.getString("kafka.elasticsearch.metrics.ttl", null);
 			getVmInfo = props.getBoolean("kafka.elasticsearch.metrics.getVmInfo", true);
 
 			predicate = MetricPredicate.ALL;
