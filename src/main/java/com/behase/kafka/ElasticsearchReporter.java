@@ -42,7 +42,6 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	public static final MetricPredicate DEFAULT_METRIC_PREDICATE = MetricPredicate.ALL;
 	public static final String DEFAULT_INDEX_PREFIX = "elasticsearch-reporter-default";
 	public static final String DEFAULT_TIMESTAMP_FIELD_NAME = "@timestamp";
-
 	public static final String DEFAULT_NAME = "elasticsearch-reporter";
 
 	protected static final String ES_BULK_INDEX_RAW_FORMAT = "{\"index\":{\"_index\":\"%s\",\"_type\":\"%s\"}}";
@@ -57,7 +56,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 
 	protected final List<String> nodesList = new ArrayList<String>();
 	protected StringWriter buffer = new StringWriter();
-	protected AtomicInteger nextHost = new AtomicInteger();
+	protected AtomicInteger nextHostIndex = new AtomicInteger();
 	protected String hostname;
 	protected final JsonFactory jsonFactory = new JsonFactory();
 	protected final VirtualMachineMetrics vm = VirtualMachineMetrics.getInstance();
@@ -303,6 +302,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	protected void sendBulkRequest() {
 		final String sBuf = buffer.toString();
 		buffer = new StringWriter();
+
 		if (isEmpty(sBuf)) {
 			LOG.info("The metrics is blank");
 			return;
@@ -315,8 +315,8 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		boolean connected = false;
 
 		for (int i = 0; i < nodesList.size(); i++) { // Round-Robin
-			int hostIndex = nextHost.get();
-			nextHost.set((nextHost.get() == nodesList.size() - 1) ? 0 : nextHost.get() + 1);
+			int hostIndex = nextHostIndex.get();
+			nextHostIndex.set((nextHostIndex.get() == nodesList.size() - 1) ? 0 : nextHostIndex.get() + 1);
 			try {
 				URL templateUrl = new URL("http://" + nodesList.get(hostIndex) + "/_bulk");
 				LOG.info("Request to Elasticsearch '{}'", templateUrl);

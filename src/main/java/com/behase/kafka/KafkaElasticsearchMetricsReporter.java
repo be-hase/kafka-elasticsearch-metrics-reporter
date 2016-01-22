@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, KafkaElasticsearchMetricsReporterMBean {
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaElasticsearchMetricsReporter.class);
 
+	public static final String DEFAULT_ES_INDEX_PREFIX = "kafka-metrics-";
+
 	protected ElasticsearchReporter reporter;
 	protected boolean initialized = false;
 	protected boolean running = false;
@@ -29,7 +31,7 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 			KafkaMetricsConfig metricsConfig = new KafkaMetricsConfig(props);
 
 			esNodes = props.getString("kafka.elasticsearch.metrics.nodes", null);
-			esIndexPrefix = props.getString("kafka.elasticsearch.metrics.indexPrefix", null);
+			esIndexPrefix = props.getString("kafka.elasticsearch.metrics.indexPrefix", DEFAULT_ES_INDEX_PREFIX);
 			String predicateRegex = props.getString("kafka.elasticsearch.metrics.excludeRegex", null);
 			esTtl = props.getString("kafka.elasticsearch.metrics.ttl", null);
 			getVmInfo = props.getBoolean("kafka.elasticsearch.metrics.getVmInfo", true);
@@ -38,6 +40,9 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 			if (predicateRegex != null) {
 				predicate = new ExcludeRegexRegexMetricPredicate(predicateRegex);
 			}
+
+			// validate
+			validate();
 
 			// init
 			reporter = new ElasticsearchReporter(
@@ -56,6 +61,12 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 				startReporter(metricsConfig.pollingIntervalSecs());
 				LOG.debug("KafkaElasticsearchMetricsReporter initialized.");
 			}
+		}
+	}
+
+	public void validate() {
+		if (esNodes == null) {
+			throw new IllegalArgumentException("kafka.elasticsearch.metrics.nodes is null.");
 		}
 	}
 
