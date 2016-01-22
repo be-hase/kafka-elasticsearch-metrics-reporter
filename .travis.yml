@@ -30,6 +30,7 @@ script:
   - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
   - docker stop $dps
 
+
 cache:
   directories:
     - $HOME/.m2
