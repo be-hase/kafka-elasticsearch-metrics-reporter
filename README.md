@@ -21,19 +21,22 @@ This send metris data to Elasticseach.
 Edit the server.properties file of your installation, activate the reporter by setting:
 
 ```
+# kafka properties
 kafka.metrics.reporters=com.behase.kafka.KafkaElasticsearchMetricsReporter
+kafka.metrics.polling.interval.secs=10
+
+# kafka-elasticsearch-metrics-reporter properties
 kafka.elasticsearch.metrics.nodes=<elasticsearch-host>:<port>
 kafka.elasticsearch.metrics.reporter.enabled=true
 ```
 
-Here is a list of config.
+Here is a list of properties.
 
 | property name | default | required | description |
 | --- | --- | --- | --- |
 | kafka.elasticsearch.metrics.nodes |  | Y | Host and IP of your elasticsearch nodes. (Comma separated) |
 | kafka.elasticsearch.metrics.indexPrefix | kafka-metrics- |  | Prefix of elasticsearch index. |
 | kafka.elasticsearch.metrics.excludeRegex |  |  | This can be use to exclude some metrics from graphite.<br>Because kafka has a lot of metrics, it is useful. |
-| kafka.elasticsearch.metrics.indexPrefix | kafka-metrics- |  | Prefix of elasticsearch index. |
 | kafka.elasticsearch.metrics.ttl |  |  | TTL (time to live) |
 | kafka.elasticsearch.metrics.getVmInfo | true |  | If this is true, you can get JVM metrics. |
 | kafka.elasticsearch.metrics.reporter.enabled | false |  | If you want to use kafka-elasticsearch-metrics-reporter,  set true.|
