@@ -11,8 +11,8 @@ This send metris data to Elasticseach.
   * I tested with 1.6, 1.7, 2.0, 2.1.
 
 # Install on broker.
-1. Build this project using `mvn clean package -DskipTests` or download jar from [here](https://github.com/be-hase/kafka-elasticsearch-metrics-reporter/releases/download/v1.0.0/kafka-elasticsearch-metrics-reporter-1.0.0-shaded.jar).
-2. Add `kafka-elasticsearch-metrics-reporter-1.0.0-shaded.jar` to the `libs/` directory of your kafka broker installation.
+1. Build this project using `mvn clean package -DskipTests` or download jar from [here](https://github.com/be-hase/kafka-elasticsearch-metrics-reporter/releases/download/v1.1.0/kafka-elasticsearch-metrics-reporter-1.1.0-shaded.jar).
+2. Add `kafka-elasticsearch-metrics-reporter-1.1.0-shaded.jar` to the `libs/` directory of your kafka broker installation.
 3. Configure the broker (see the configuration section below).
 4. Restart the broker.
 
@@ -36,7 +36,6 @@ Here is a list of properties.
 | --- | --- | --- | --- |
 | kafka.elasticsearch.metrics.nodes |  | Y | Host and IP of your elasticsearch nodes. (Comma separated) |
 | kafka.elasticsearch.metrics.indexPrefix | kafka-metrics- |  | Prefix of elasticsearch index. |
-| kafka.elasticsearch.metrics.excludeRegex |  |  | This can be use to exclude some metrics from graphite.<br>Because kafka has a lot of metrics, it is useful. |
 | kafka.elasticsearch.metrics.ttl |  |  | TTL (time to live) |
 | kafka.elasticsearch.metrics.getVmInfo | true |  | If this is true, you can get JVM metrics. |
 | kafka.elasticsearch.metrics.reporter.enabled | false |  | If you want to use kafka-elasticsearch-metrics-reporter,  set true.|
