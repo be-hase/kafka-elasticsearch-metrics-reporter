@@ -15,8 +15,8 @@ import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.core.VirtualMachineMetrics;
 import com.yammer.metrics.reporting.AbstractPollingReporter;
 import com.yammer.metrics.stats.Snapshot;
+import lombok.Cleanup;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import lombok.Cleanup;
 
 public class ElasticsearchReporter extends AbstractPollingReporter implements MetricProcessor<DateTime> {
 	private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchReporter.class);
@@ -276,7 +274,17 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 
 	protected JsonGenerator createAndInitJsonGenerator(final Writer sw, MetricName metricName, DateTime epoch)
 			throws IOException {
-		return createAndInitJsonGenerator(sw, sanitizeName(metricName), epoch);
+		JsonGenerator gen = jsonFactory.createGenerator(sw);
+		gen.writeStartObject();
+		gen.writeStringField(timestampFieldName, epoch.toString(ISODateTimeFormat.dateTime()));
+		gen.writeStringField("@group", metricName.getGroup());
+		gen.writeStringField("@name", metricName.getName());
+		gen.writeStringField("@type", metricName.getType());
+		if (metricName.hasScope()) {
+			gen.writeStringField("@scope", metricName.getScope());
+		}
+		gen.writeStringField("hostname", hostname);
+		return gen;
 	}
 
 	protected JsonGenerator createAndInitJsonGenerator(final Writer sw, String metricName, DateTime epoch)
@@ -361,18 +369,5 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 
 	public static boolean isEmpty(String str) {
 		return str == null || str.length() == 0;
-	}
-
-	protected static String sanitizeName(MetricName name) {
-		final StringBuilder sb = new StringBuilder()
-				.append(name.getGroup())
-				.append('.')
-				.append(name.getType())
-				.append('.');
-		if (name.hasScope()) {
-			sb.append(name.getScope())
-					.append('.');
-		}
-		return sb.append(name.getName()).toString();
 	}
 }

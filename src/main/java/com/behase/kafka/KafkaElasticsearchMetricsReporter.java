@@ -32,14 +32,10 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 
 			esNodes = props.getString("kafka.elasticsearch.metrics.nodes", null);
 			esIndexPrefix = props.getString("kafka.elasticsearch.metrics.indexPrefix", DEFAULT_ES_INDEX_PREFIX);
-			String predicateRegex = props.getString("kafka.elasticsearch.metrics.excludeRegex", null);
 			esTtl = props.getString("kafka.elasticsearch.metrics.ttl", null);
 			getVmInfo = props.getBoolean("kafka.elasticsearch.metrics.getVmInfo", true);
 
 			predicate = MetricPredicate.ALL;
-			if (predicateRegex != null) {
-				predicate = new ExcludeRegexRegexMetricPredicate(predicateRegex);
-			}
 
 			// validate
 			validate();
