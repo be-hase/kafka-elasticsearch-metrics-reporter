@@ -76,6 +76,8 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		for (String node : nodesArray) {
 			nodesList.add(node.trim());
 		}
+
+		hostname = "unknown";
 		try {
 			InetAddress inetAddress = InetAddress.getLocalHost();
 			hostname = inetAddress.getCanonicalHostName();
@@ -83,8 +85,8 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 				hostname = inetAddress.getHostAddress();
 			}
 		} catch (Exception e) {
-			hostname = "unknown";
 		}
+		hostname = replaceSpecialChars(hostname);
 	}
 
 	@Override
@@ -279,7 +281,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		gen.writeStartObject();
 		gen.writeStringField(timestampFieldName, epoch.toString(ISODateTimeFormat.dateTime()));
 		gen.writeStringField("@name", replaceSpecialChars(sanitizeMetricName(metricName)));
-		gen.writeStringField("hostname", replaceSpecialChars(hostname));
+		gen.writeStringField("hostname", hostname);
 		return gen;
 	}
 
@@ -289,7 +291,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		gen.writeStartObject();
 		gen.writeStringField(timestampFieldName, epoch.toString(ISODateTimeFormat.dateTime()));
 		gen.writeStringField("@name", replaceSpecialChars(metricName));
-		gen.writeStringField("hostname", replaceSpecialChars(hostname));
+		gen.writeStringField("hostname", hostname);
 		return gen;
 	}
 
