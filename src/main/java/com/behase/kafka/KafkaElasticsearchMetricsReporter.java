@@ -34,8 +34,12 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 			esIndexPrefix = props.getString("kafka.elasticsearch.metrics.indexPrefix", DEFAULT_ES_INDEX_PREFIX);
 			esTtl = props.getString("kafka.elasticsearch.metrics.ttl", null);
 			getVmInfo = props.getBoolean("kafka.elasticsearch.metrics.getVmInfo", true);
+			String excludeMBeanRegex = props.getString("kafka.elasticsearch.metrics.excludeMBeanRegex", null);
 
 			predicate = MetricPredicate.ALL;
+			if (excludeMBeanRegex != null) {
+				predicate = new ExcludeMBeanMetricPredicate(excludeMBeanRegex);
+			}
 
 			// validate
 			validate();

@@ -21,6 +21,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.ObjectName;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
@@ -82,7 +83,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 				hostname = inetAddress.getHostAddress();
 			}
 		} catch (Exception e) {
-			hostname = "unknown-host";
+			hostname = "unknown";
 		}
 	}
 
@@ -201,7 +202,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		} else if (value instanceof Float) {
 			json.writeNumberField("floatValue", (Float)value);
 		} else if (value instanceof String) {
-			json.writeStringField("stringValue", (String)value);
+			json.writeStringField("stringValue", replaceSpecialChars((String)value));
 		} else if (value instanceof Boolean) {
 			json.writeBooleanField("booleanValue", (Boolean)value);
 		} else {
@@ -240,7 +241,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 			if (isEmpty(pool.getKey())) {
 				continue;
 			}
-			String key = pool.getKey().replace(" ", "_");
+			String key = replaceSpecialChars(pool.getKey());
 			json.writeNumberField("memory.memory_pool_usages." + key, pool.getValue());
 		}
 
@@ -253,15 +254,15 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 				continue;
 			}
 			String key = entry.getKey().toString().toLowerCase();
-			key = key.replace(" ", "_");
-			json.writeNumberField("thread-states." + key, entry.getValue());
+			key = replaceSpecialChars(key);
+			json.writeNumberField("thread_states." + key, entry.getValue());
 		}
 
 		for (Map.Entry<String, VirtualMachineMetrics.GarbageCollectorStats> entry : vm.garbageCollectors().entrySet()) {
 			if (isEmpty(entry.getKey())) {
 				continue;
 			}
-			String key = entry.getKey().replace(" ", "_");
+			String key = replaceSpecialChars(entry.getKey());
 			final String name = "gc." + key;
 			json.writeNumberField(name + ".time", entry.getValue().getTime(TimeUnit.MILLISECONDS));
 			json.writeNumberField(name + ".runs", entry.getValue().getRuns());
@@ -277,13 +278,8 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		JsonGenerator gen = jsonFactory.createGenerator(sw);
 		gen.writeStartObject();
 		gen.writeStringField(timestampFieldName, epoch.toString(ISODateTimeFormat.dateTime()));
-		gen.writeStringField("@group", metricName.getGroup());
-		gen.writeStringField("@name", metricName.getName());
-		gen.writeStringField("@type", metricName.getType());
-		if (metricName.hasScope()) {
-			gen.writeStringField("@scope", metricName.getScope());
-		}
-		gen.writeStringField("hostname", hostname);
+		gen.writeStringField("@name", replaceSpecialChars(sanitizeMetricName(metricName)));
+		gen.writeStringField("hostname", replaceSpecialChars(hostname));
 		return gen;
 	}
 
@@ -292,8 +288,8 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		JsonGenerator gen = jsonFactory.createGenerator(sw);
 		gen.writeStartObject();
 		gen.writeStringField(timestampFieldName, epoch.toString(ISODateTimeFormat.dateTime()));
-		gen.writeStringField("@name", metricName);
-		gen.writeStringField("hostname", hostname);
+		gen.writeStringField("@name", replaceSpecialChars(metricName));
+		gen.writeStringField("hostname", replaceSpecialChars(hostname));
 		return gen;
 	}
 
@@ -369,5 +365,25 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 
 	public static boolean isEmpty(String str) {
 		return str == null || str.length() == 0;
+	}
+
+	public static String sanitizeMetricName(MetricName metricName) {
+		final StringBuilder nameBuilder = new StringBuilder();
+		nameBuilder.append(metricName.getGroup());
+		nameBuilder.append(":type=");
+		nameBuilder.append(metricName.getType());
+		if (metricName.hasScope()) {
+			nameBuilder.append(",scope=");
+			nameBuilder.append(metricName.getScope());
+		}
+		nameBuilder.append(",name=");
+		nameBuilder.append(metricName.getName());
+		return nameBuilder.toString();
+	}
+
+	public static String replaceSpecialChars(String str) {
+		str = str.replace(" ", "_");
+		str = str.replace("-", "_");
+		return str;
 	}
 }

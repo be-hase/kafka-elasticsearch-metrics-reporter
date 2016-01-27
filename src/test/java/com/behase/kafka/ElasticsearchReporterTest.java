@@ -357,31 +357,31 @@ public class ElasticsearchReporterTest {
 
 	@Test
 	public void printRegularMetrics_with_predicate() {
-//		reporter = new ElasticsearchReporter(
-//				metrics,
-//				DOCKER_HOST + ":9200",
-//				new ExcludeRegexRegexMetricPredicate("group.type.gauge|group.type.counter"),
-//				"index-",
-//				null,
-//				null,
-//				true,
-//				null
-//		);
-//
-//		metrics.newGauge(new MetricName("group", "type", "gauge"), new Gauge<String>() {
-//			public String value() {
-//				return "gauge";
-//			}
-//		});
-//		metrics.newCounter(new MetricName("group", "type", "counter")).inc();
-//		metrics.newMeter(new MetricName("group", "type", "meter"), "meter", TimeUnit.SECONDS).mark();
-//		metrics.newHistogram(new MetricName("group", "type", "histogram"), false).update(100);
-//		Timer timer = metrics.newTimer(new MetricName("group", "type", "timer"), TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-//		timer.time();
-//		timer.stop();
-//
-//		reporter.printRegularMetrics(DateTime.now());
-//		assertThat(reporter.buffer.toString().split("\n").length, is(6));
+		reporter = new ElasticsearchReporter(
+				metrics,
+				DOCKER_HOST + ":9200",
+				new ExcludeMBeanMetricPredicate("group:type=type,name=gauge|group:type=type,name=counter"),
+				"index-",
+				null,
+				null,
+				true,
+				null
+		);
+
+		metrics.newGauge(new MetricName("group", "type", "gauge"), new Gauge<String>() {
+			public String value() {
+				return "gauge";
+			}
+		});
+		metrics.newCounter(new MetricName("group", "type", "counter")).inc();
+		metrics.newMeter(new MetricName("group", "type", "meter"), "meter", TimeUnit.SECONDS).mark();
+		metrics.newHistogram(new MetricName("group", "type", "histogram"), false).update(100);
+		Timer timer = metrics.newTimer(new MetricName("group", "type", "timer"), TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
+		timer.time();
+		timer.stop();
+
+		reporter.printRegularMetrics(DateTime.now());
+		assertThat(reporter.buffer.toString().split("\n").length, is(6));
 	}
 
 	@Test
@@ -405,7 +405,7 @@ public class ElasticsearchReporterTest {
 		));
 		assertThat(pathList, hasItems(
 				containsString("memory.memory_pool_usages"),
-				containsString("thread-states"),
+				containsString("thread_states"),
 				containsString("gc")
 		));
 	}
@@ -432,10 +432,7 @@ public class ElasticsearchReporterTest {
 
 		DocumentContext doc = JsonPath.using(jsonConf).parse(sw.toString());
 		assertThat(doc.read("$.@timestamp", String.class), containsString("2016-01-01T00:00:00.000"));
-		assertThat(doc.read("$.@group", String.class), is("group"));
-		assertThat(doc.read("$.@type", String.class), is("type"));
-		assertThat(doc.read("$.@scope", String.class), is("scope"));
-		assertThat(doc.read("$.@name", String.class), is("name"));
+		assertThat(doc.read("$.@name", String.class), is("group:type=type,scope=scope,name=name"));
 		assertThat(doc.read("$.hostname", String.class), is(reporter.hostname));
 	}
 
@@ -495,7 +492,7 @@ public class ElasticsearchReporterTest {
 
 		reporter.printRegularMetrics(DateTime.now());
 		reporter.sendBulkRequest();
-		Thread.sleep(1000);
+		Thread.sleep(2000);
 
 		HttpGet getMethod = new HttpGet("http://" + DOCKER_HOST + ":9200/index-2016.01.01/_search");
 		@Cleanup CloseableHttpResponse response = httpClient.execute(getMethod);
@@ -526,6 +523,17 @@ public class ElasticsearchReporterTest {
 		assertThat(ElasticsearchReporter.isEmpty(" "), is(false));
 		assertThat(ElasticsearchReporter.isEmpty("a"), is(false));
 		assertThat(ElasticsearchReporter.isEmpty(null), is(true));
+	}
+
+	@Test
+	public void sanitizeMetricName() {
+		assertThat(ElasticsearchReporter.sanitizeMetricName(new MetricName("group", "type", "name", "scope")), is("group:type=type,scope=scope,name=name"));
+		assertThat(ElasticsearchReporter.sanitizeMetricName(new MetricName("group", "type", "name")), is("group:type=type,name=name"));
+	}
+
+	@Test
+	public void replaceSpecialChars() {
+		assertThat(ElasticsearchReporter.replaceSpecialChars("- - -"), is("_____"));
 	}
 
 	@Test

@@ -8,7 +8,8 @@ This send metris data to Elasticseach.
 * >= kafka 0.8.2.0
   * Maybe it works 0.8.1.x, but I didn't confirm.
 * elasticsearch 
-  * I tested with 1.6, 1.7, 2.0, 2.1.
+  * I tested with 1.7, 2.0, 2.1.
+  * Maybe it works <= 1.6, but I didn't confirm.
 
 # Install on broker.
 1. Build this project using `mvn clean package -DskipTests` or download jar from [here](https://github.com/be-hase/kafka-elasticsearch-metrics-reporter/releases/download/v1.1.0/kafka-elasticsearch-metrics-reporter-1.1.0-shaded.jar).
@@ -38,6 +39,7 @@ Here is a list of properties.
 | kafka.elasticsearch.metrics.indexPrefix | kafka-metrics- |  | Prefix of elasticsearch index. |
 | kafka.elasticsearch.metrics.ttl |  |  | TTL (time to live) |
 | kafka.elasticsearch.metrics.getVmInfo | true |  | If this is true, you can get JVM metrics. |
+| kafka.elasticsearch.metrics.excludeMBeanRegex |  |  | This can be use to exclude some metrics from elasticseach.<br>Because kafka has a lot of metrics, it is useful. |
 | kafka.elasticsearch.metrics.reporter.enabled | false |  | If you want to use kafka-elasticsearch-metrics-reporter,  set true.|
 
 # Contribution
