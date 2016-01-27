@@ -37,9 +37,6 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 			String excludeMBeanRegex = props.getString("kafka.elasticsearch.metrics.excludeMBeanRegex", null);
 
 			predicate = MetricPredicate.ALL;
-			if (excludeMBeanRegex != null) {
-				predicate = new ExcludeMBeanMetricPredicate(excludeMBeanRegex);
-			}
 
 			// validate
 			validate();

@@ -21,7 +21,6 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.ObjectName;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
@@ -280,7 +279,12 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		JsonGenerator gen = jsonFactory.createGenerator(sw);
 		gen.writeStartObject();
 		gen.writeStringField(timestampFieldName, epoch.toString(ISODateTimeFormat.dateTime()));
-		gen.writeStringField("@name", replaceSpecialChars(sanitizeMetricName(metricName)));
+		gen.writeStringField("@group", replaceSpecialChars(metricName.getGroup()));
+		gen.writeStringField("@type", replaceSpecialChars(metricName.getType()));
+		gen.writeStringField("@name", replaceSpecialChars(metricName.getName()));
+		if (metricName.hasScope()) {
+			gen.writeStringField("@scope", replaceSpecialChars(metricName.getScope()));
+		}
 		gen.writeStringField("hostname", hostname);
 		return gen;
 	}
@@ -367,20 +371,6 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 
 	public static boolean isEmpty(String str) {
 		return str == null || str.length() == 0;
-	}
-
-	public static String sanitizeMetricName(MetricName metricName) {
-		final StringBuilder nameBuilder = new StringBuilder();
-		nameBuilder.append(metricName.getGroup());
-		nameBuilder.append(":type=");
-		nameBuilder.append(metricName.getType());
-		if (metricName.hasScope()) {
-			nameBuilder.append(",scope=");
-			nameBuilder.append(metricName.getScope());
-		}
-		nameBuilder.append(",name=");
-		nameBuilder.append(metricName.getName());
-		return nameBuilder.toString();
 	}
 
 	public static String replaceSpecialChars(String str) {

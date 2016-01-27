@@ -356,35 +356,6 @@ public class ElasticsearchReporterTest {
 	}
 
 	@Test
-	public void printRegularMetrics_with_predicate() {
-		reporter = new ElasticsearchReporter(
-				metrics,
-				DOCKER_HOST + ":9200",
-				new ExcludeMBeanMetricPredicate("group:type=type,name=gauge|group:type=type,name=counter"),
-				"index-",
-				null,
-				null,
-				true,
-				null
-		);
-
-		metrics.newGauge(new MetricName("group", "type", "gauge"), new Gauge<String>() {
-			public String value() {
-				return "gauge";
-			}
-		});
-		metrics.newCounter(new MetricName("group", "type", "counter")).inc();
-		metrics.newMeter(new MetricName("group", "type", "meter"), "meter", TimeUnit.SECONDS).mark();
-		metrics.newHistogram(new MetricName("group", "type", "histogram"), false).update(100);
-		Timer timer = metrics.newTimer(new MetricName("group", "type", "timer"), TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-		timer.time();
-		timer.stop();
-
-		reporter.printRegularMetrics(DateTime.now());
-		assertThat(reporter.buffer.toString().split("\n").length, is(6));
-	}
-
-	@Test
 	public void printVmMetrics() throws Exception {
 		reporter.printVmMetrics(DateTime.now());
 		String[] buf = reporter.buffer.toString().split("\n");
@@ -432,7 +403,10 @@ public class ElasticsearchReporterTest {
 
 		DocumentContext doc = JsonPath.using(jsonConf).parse(sw.toString());
 		assertThat(doc.read("$.@timestamp", String.class), containsString("2016-01-01T00:00:00.000"));
-		assertThat(doc.read("$.@name", String.class), is("group:type=type,scope=scope,name=name"));
+		assertThat(doc.read("$.@group", String.class), is("group"));
+		assertThat(doc.read("$.@type", String.class), is("type"));
+		assertThat(doc.read("$.@name", String.class), is("name"));
+		assertThat(doc.read("$.@scope", String.class), is("scope"));
 		assertThat(doc.read("$.hostname", String.class), is(reporter.hostname));
 	}
 
@@ -523,12 +497,6 @@ public class ElasticsearchReporterTest {
 		assertThat(ElasticsearchReporter.isEmpty(" "), is(false));
 		assertThat(ElasticsearchReporter.isEmpty("a"), is(false));
 		assertThat(ElasticsearchReporter.isEmpty(null), is(true));
-	}
-
-	@Test
-	public void sanitizeMetricName() {
-		assertThat(ElasticsearchReporter.sanitizeMetricName(new MetricName("group", "type", "name", "scope")), is("group:type=type,scope=scope,name=name"));
-		assertThat(ElasticsearchReporter.sanitizeMetricName(new MetricName("group", "type", "name")), is("group:type=type,name=name"));
 	}
 
 	@Test
