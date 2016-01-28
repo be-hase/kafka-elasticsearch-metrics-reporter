@@ -124,9 +124,11 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, metricName, epoch);
 
 		json.writeNumberField("count", counter.count());
+		counter.clear();
 
 		json.writeEndObject();
 		json.flush();
+
 		addReportBuffer("counter", writer.toString(), epoch);
 	}
 
@@ -149,6 +151,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		json.writeNumberField("p999", snapshot.get999thPercentile());
 		json.writeNumberField("count", histogram.count());
 		json.writeNumberField("sum", histogram.sum());
+		histogram.clear();
 
 		json.writeEndObject();
 		json.flush();
