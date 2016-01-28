@@ -41,6 +41,10 @@ Here is a list of properties.
 | kafka.elasticsearch.metrics.getVmInfo | true |  | If this is true, you can get JVM metrics. |
 | kafka.elasticsearch.metrics.reporter.enabled | false |  | If you want to use kafka-elasticsearch-metrics-reporter,  set true.|
 
+# Visualize by your kibana
+
+![kibana](https://raw.githubusercontent.com/be-hase/kafka-elasticsearch-metrics-reporter/master/doc/img/kibana.png)
+
 # Contribution
 
 Welcome !!  
