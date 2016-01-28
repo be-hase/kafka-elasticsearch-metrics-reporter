@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/be-hase/kafka-elasticsearch-metrics-reporter.svg?branch=master)](https://travis-ci.org/be-hase/kafka-elasticsearch-metrics-reporter)
 
-
 # kafka-elasticsearch-metrics-reporter
 This is repoter for kafka.  
 This send metris data to Elasticseach.
@@ -40,7 +39,6 @@ Here is a list of properties.
 | kafka.elasticsearch.metrics.indexPrefix | kafka-metrics- |  | Prefix of elasticsearch index. |
 | kafka.elasticsearch.metrics.ttl |  |  | TTL (time to live) |
 | kafka.elasticsearch.metrics.getVmInfo | true |  | If this is true, you can get JVM metrics. |
-| kafka.elasticsearch.metrics.excludeMBeanRegex |  |  | This can be use to exclude some metrics from elasticseach.<br>Because kafka has a lot of metrics, it is useful. |
 | kafka.elasticsearch.metrics.reporter.enabled | false |  | If you want to use kafka-elasticsearch-metrics-reporter,  set true.|
 
 # Contribution
