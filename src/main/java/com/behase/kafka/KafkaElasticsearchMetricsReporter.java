@@ -24,6 +24,7 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 	protected MetricPredicate predicate;
 	protected String esTtl;
 	protected boolean getVmInfo;
+	protected boolean enableReset;
 
 	@Override
 	public void init(VerifiableProperties props) {
@@ -34,7 +35,7 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 			esIndexPrefix = props.getString("kafka.elasticsearch.metrics.indexPrefix", DEFAULT_ES_INDEX_PREFIX);
 			esTtl = props.getString("kafka.elasticsearch.metrics.ttl", null);
 			getVmInfo = props.getBoolean("kafka.elasticsearch.metrics.getVmInfo", true);
-			String excludeMBeanRegex = props.getString("kafka.elasticsearch.metrics.excludeMBeanRegex", null);
+			enableReset = props.getBoolean("kafka.elasticsearch.metrics.enableReset", true);
 
 			predicate = MetricPredicate.ALL;
 
@@ -50,6 +51,7 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 					null,
 					esTtl,
 					getVmInfo,
+					enableReset,
 					null
 			);
 
@@ -91,6 +93,7 @@ public class KafkaElasticsearchMetricsReporter implements KafkaMetricsReporter, 
 					null,
 					esTtl,
 					getVmInfo,
+					enableReset,
 					null
 			);
 		}

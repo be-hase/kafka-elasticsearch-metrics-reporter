@@ -52,6 +52,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	protected final String timestampFieldName;
 	protected final String ttl;
 	protected final boolean printVmMetrics;
+	protected final boolean enableReset;
 
 	protected final List<String> nodesList = new ArrayList<String>();
 	protected StringWriter buffer = new StringWriter();
@@ -61,7 +62,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 	protected final VirtualMachineMetrics vm = VirtualMachineMetrics.getInstance();
 
 	public ElasticsearchReporter(MetricsRegistry registry, String nodes, MetricPredicate predicate, String indexPrefix,
-			String timestampFieldName, String ttl, boolean printVmMetrics, String name) {
+			String timestampFieldName, String ttl, boolean printVmMetrics, boolean enableReset, String name) {
 		super(registry, name == null ? DEFAULT_NAME : name);
 
 		this.nodes = nodes;
@@ -70,6 +71,7 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		this.timestampFieldName = timestampFieldName == null ? DEFAULT_TIMESTAMP_FIELD_NAME : timestampFieldName;
 		this.ttl = ttl;
 		this.printVmMetrics = printVmMetrics;
+		this.enableReset = enableReset;
 
 		String[] nodesArray = nodes.split(",");
 		for (String node : nodesArray) {
@@ -124,7 +126,9 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		@Cleanup JsonGenerator json = createAndInitJsonGenerator(writer, metricName, epoch);
 
 		json.writeNumberField("count", counter.count());
-		counter.clear();
+		if (enableReset) {
+			counter.clear();
+		}
 
 		json.writeEndObject();
 		json.flush();
@@ -151,7 +155,9 @@ public class ElasticsearchReporter extends AbstractPollingReporter implements Me
 		json.writeNumberField("p999", snapshot.get999thPercentile());
 		json.writeNumberField("count", histogram.count());
 		json.writeNumberField("sum", histogram.sum());
-		histogram.clear();
+		if (enableReset) {
+			histogram.clear();
+		}
 
 		json.writeEndObject();
 		json.flush();

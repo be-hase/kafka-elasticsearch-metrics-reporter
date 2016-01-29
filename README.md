@@ -40,6 +40,7 @@ Here is a list of properties.
 | kafka.elasticsearch.metrics.ttl |  |  | TTL (time to live) |
 | kafka.elasticsearch.metrics.getVmInfo | true |  | If this is true, you can get JVM metrics. |
 | kafka.elasticsearch.metrics.reporter.enabled | false |  | If you want to use kafka-elasticsearch-metrics-reporter,  set true.|
+| kafka.elasticsearch.metrics.enableReset | true |  | If you want to reset count and histogram,  set true.|
 
 # Contribution
 

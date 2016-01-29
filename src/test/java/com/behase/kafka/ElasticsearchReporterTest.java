@@ -57,8 +57,9 @@ public class ElasticsearchReporterTest {
 
 		public SpyElasticsearchReporter(MetricsRegistry registry, String nodes,
 				MetricPredicate predicate,
-				String indexPrefix, String timestampFieldName, String ttl, boolean printVmMetrics, String name) {
-			super(registry, nodes, predicate, indexPrefix, timestampFieldName, ttl, printVmMetrics, name);
+				String indexPrefix, String timestampFieldName, String ttl, boolean printVmMetrics, boolean enableReset,
+				String name) {
+			super(registry, nodes, predicate, indexPrefix, timestampFieldName, ttl, printVmMetrics, enableReset, name);
 		}
 
 		protected void sendBulkRequest() {
@@ -102,6 +103,7 @@ public class ElasticsearchReporterTest {
 				null,
 				null,
 				true,
+				true,
 				null
 		);
 
@@ -112,6 +114,7 @@ public class ElasticsearchReporterTest {
 				"index-",
 				null,
 				null,
+				true,
 				true,
 				null
 		);
@@ -431,6 +434,7 @@ public class ElasticsearchReporterTest {
 				"index-",
 				null,
 				"1d",
+				true,
 				true,
 				null
 		);
