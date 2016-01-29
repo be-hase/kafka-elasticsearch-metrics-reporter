@@ -42,6 +42,10 @@ Here is a list of properties.
 | kafka.elasticsearch.metrics.reporter.enabled | false |  | If you want to use kafka-elasticsearch-metrics-reporter,  set true.|
 | kafka.elasticsearch.metrics.enableReset | true |  | If you want to reset count and histogram,  set true.|
 
+# Visualize by your kibana
+
+![kibana](https://raw.githubusercontent.com/be-hase/kafka-elasticsearch-metrics-reporter/master/doc/img/kibana.png)
+
 # Contribution
 
 Welcome !!  
