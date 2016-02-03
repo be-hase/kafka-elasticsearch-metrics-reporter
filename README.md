@@ -8,8 +8,8 @@ This send metris data to Elasticseach.
 * >= kafka 0.8.2.0
   * Maybe it works 0.8.1.x, but I didn't confirm.
 * elasticsearch 
-  * I tested with 1.7, 2.0, 2.1.
-  * Maybe it works <= 1.6, but I didn't confirm.
+  * I tested with 2.1(latest).
+  * Maybe it works <= 2.1(latest), but I didn't confirm.
 
 # Install on broker.
 1. Build this project using `mvn clean package -DskipTests` or download jar from [here](https://github.com/be-hase/kafka-elasticsearch-metrics-reporter/releases/download/v1.1.0/kafka-elasticsearch-metrics-reporter-1.1.0-shaded.jar).

@@ -10,18 +10,8 @@ jdk:
   - oraclejdk8
 
 script:
-  - docker pull elasticsearch:2.1
-  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:2.1`
-  - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
-  - docker stop $dps
-
-  - docker pull elasticsearch:2.0
-  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:2.0`
-  - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
-  - docker stop $dps
-
-  - docker pull elasticsearch:1.7
-  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:1.7`
+  - docker pull elasticsearch:latest
+  - dps=`docker run -d -p 127.0.0.1:9200:9200 elasticsearch:latest`
   - mvn clean test -DargLine="-DdockerHost=127.0.0.1"
   - docker stop $dps
 
